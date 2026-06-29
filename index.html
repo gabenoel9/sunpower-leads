@@ -102,7 +102,7 @@
     .stat-number { font-family:'Montserrat',sans-serif; font-size:34px; font-weight:800; color:var(--text); line-height:1; }
     .stat-label { font-size:11px; color:var(--text2); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-top:6px; }
 
-    .dashboard-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .dashboard-grid { display:grid; grid-template-columns:1fr; gap:20px; }
     .card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
     .card-header { padding:16px 20px; border-bottom:1.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
     .card-header h3 { font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
@@ -231,6 +231,47 @@
     .empty-state .icon { font-size:36px; margin-bottom:10px; }
     .empty-state p { font-size:14px; }
     .loading-files { font-size:12px; color:var(--text3); padding:10px 0; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      .sidebar { position:fixed; left:-230px; top:0; bottom:0; transition:left 0.3s ease; z-index:200; }
+      .sidebar.open { left:0; }
+      .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:199; }
+      .sidebar-overlay.open { display:block; }
+      .mobile-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:var(--green-dark); position:fixed; top:0; left:0; right:0; z-index:100; height:56px; }
+      .mobile-header-logo { font-family:'Montserrat',sans-serif; font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px; }
+      .mobile-menu-btn { background:none; border:none; color:#fff; font-size:24px; cursor:pointer; padding:4px; line-height:1; }
+      .mobile-novo-btn { background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:22px; cursor:pointer; padding:4px 10px; border-radius:8px; }
+      .main { margin-left:0; padding:72px 14px 80px; }
+      .bottom-nav { display:flex; position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1.5px solid var(--border); z-index:100; height:62px; }
+      .bottom-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:none; background:none; cursor:pointer; color:var(--text3); font-size:10px; font-family:'Inter',sans-serif; font-weight:600; transition:color 0.15s; padding:6px 0; }
+      .bottom-nav-item .bn-icon { font-size:20px; }
+      .bottom-nav-item.active { color:var(--green); }
+      .page-header { flex-direction:column; align-items:flex-start; gap:10px; margin-bottom:16px; }
+      .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+      .stat-number { font-size:28px; }
+      .filters { flex-direction:column; gap:8px; }
+      .filters input, .filters select { width:100%; }
+      .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      table { min-width:540px; }
+      .form-grid { grid-template-columns:1fr; }
+      .form-group.full { grid-column:1; }
+      .modal { border-radius:16px 16px 0 0; max-height:95vh; position:fixed; bottom:0; left:0; right:0; width:100%; max-width:100%; }
+      .modal-overlay { align-items:flex-end; padding:0; }
+      .base-grid { grid-template-columns:repeat(3,1fr); gap:10px; }
+      .base-stat { padding:16px 10px; }
+      .base-stat-num { font-size:28px; }
+      .login-box { width:92%; padding:36px 24px; }
+      .toast { bottom:72px; right:12px; left:12px; }
+      .modal-footer { flex-direction:column-reverse; gap:8px; }
+      .modal-footer > div { width:100%; display:flex; gap:8px; }
+      .modal-footer > div .btn { flex:1; justify-content:center; }
+    }
+    @media (min-width: 769px) {
+      .mobile-header { display:none !important; }
+      .bottom-nav { display:none !important; }
+      .sidebar-overlay { display:none !important; }
+    }
   </style>
 </head>
 <body>
@@ -260,9 +301,25 @@
   </div>
 </div>
 
+<!-- MOBILE HEADER -->
+<div class="mobile-header" id="mobile-header" style="display:none">
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  <div class="mobile-header-logo">
+    <svg viewBox="0 0 36 36" fill="none" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="10" width="10" height="10" rx="2" fill="white" opacity="0.9" transform="rotate(-45 9 15)"/>
+      <rect x="12" y="10" width="10" height="10" rx="2" fill="white" opacity="0.7" transform="rotate(-45 19 15)"/>
+      <rect x="2" y="20" width="10" height="10" rx="2" fill="white" opacity="0.7" transform="rotate(-45 9 25)"/>
+      <rect x="12" y="20" width="10" height="10" rx="2" fill="white" opacity="0.5" transform="rotate(-45 19 25)"/>
+    </svg>
+    SUNPOWER
+  </div>
+  <button class="mobile-novo-btn" onclick="abrirModalNovo()">+</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <!-- APP -->
 <div id="app">
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">
         <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -313,10 +370,6 @@
             <span style="font-size:11px;color:var(--text3)" id="proximas-count"></span>
           </div>
           <div id="proximas-lista"></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><h3>✈️ Destinos mais procurados</h3></div>
-          <div class="insight-list" id="insight-destinos"></div>
         </div>
       </div>
     </div>
@@ -503,9 +556,23 @@
       </div>
     </div>
   </div>
-</div>
+  <!-- BOTTOM NAV MOBILE -->
+  <div class="bottom-nav" id="bottom-nav" style="display:none">
+    <button class="bottom-nav-item active" id="bn-dashboard" onclick="navTo('dashboard',null);setBn('dashboard')">
+      <span class="bn-icon">📊</span>Dashboard
+    </button>
+    <button class="bottom-nav-item" id="bn-leads" onclick="navTo('leads',null);setBn('leads')">
+      <span class="bn-icon">👥</span>Leads
+    </button>
+    <button class="bottom-nav-item" id="bn-base-ativa" onclick="navTo('base-ativa',null);setBn('base-ativa')">
+      <span class="bn-icon">⭐</span>Base
+    </button>
+    <button class="bottom-nav-item" id="bn-admin" onclick="navTo('admin',null);setBn('admin')" style="display:none">
+      <span class="bn-icon">⚙️</span>Config
+    </button>
+  </div>
 
-<div class="toast" id="toast"></div>
+</div>
 <input type="file" id="excel-input" accept=".xlsx,.xls" style="display:none" onchange="processarImport(event)" />
 <input type="file" id="file-input" accept=".pdf" style="display:none" onchange="uploadArquivo(event)" />
 
@@ -587,7 +654,11 @@ const fazerLogin = () => {
     document.getElementById('user-name-display').textContent=usr.nome;
     document.getElementById('user-role-display').textContent=usr.role==='admin'?'Administrador':'Agência';
     document.getElementById('user-avatar').textContent=usr.initials;
-    if(usr.role==='admin') document.getElementById('nav-admin').style.display='flex';
+    if(usr.role==='admin') {
+      document.getElementById('nav-admin').style.display='flex';
+      document.getElementById('bn-admin').style.display='flex';
+    }
+    showMobileUI(true);
     iniciar();
   } else { document.getElementById('login-error').style.display='block'; }
 };
@@ -601,6 +672,7 @@ const logout = () => {
   document.getElementById('app').style.display='none';
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
+  showMobileUI(false);
   document.getElementById('nav-admin').style.display='none';
 };
 
@@ -962,6 +1034,10 @@ const navTo = (page,btn) => {
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
   if(btn) btn.classList.add('active');
+  // close sidebar on mobile
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  setBn(page);
   if(page==='admin'){
     const isAdmin=currentUser?.role==='admin';
     document.getElementById('admin-lock-msg').style.display=isAdmin?'none':'flex';
@@ -975,6 +1051,25 @@ const confirmarLimpar = async () => {
   if(!confirm('Tem certeza absoluta? Esta ação é irreversível.')) return;
   try{ await api('DELETE','leads?id=neq.00000000-0000-0000-0000-000000000000'); showToast('Todos os leads apagados'); await carregarLeads(); }
   catch(e){ showToast('Erro: '+e.message,'error'); }
+};
+
+// ── MOBILE ──
+const isMobile = () => window.innerWidth <= 768;
+
+const toggleSidebar = () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+};
+
+const setBn = (page) => {
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(`bn-${page}`);
+  if (el) el.classList.add('active');
+};
+
+const showMobileUI = (show) => {
+  document.getElementById('mobile-header').style.display = show ? 'flex' : 'none';
+  document.getElementById('bottom-nav').style.display = show ? 'flex' : 'none';
 };
 
 document.getElementById('modal-lead').addEventListener('click',function(e){ if(e.target===this) fecharModal(); });

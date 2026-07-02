@@ -759,9 +759,8 @@ const onStatusChange = (isNew=true) => {
 document.getElementById('f-status').addEventListener('change', () => onStatusChange(true));
 
 const aplicarPensando = () => {
-  const atual=document.getElementById('f-proxima').value||today();
-  document.getElementById('f-proxima').value=addDays(atual,1);
-  showToast('Próxima ação adiada em +1 dia');
+  document.getElementById('f-proxima').value = addDays(today(), 1);
+  showToast('Próxima ação: amanhã');
 };
 
 // ── SALVAR / DELETAR ──

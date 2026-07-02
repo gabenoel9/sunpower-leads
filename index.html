@@ -472,30 +472,14 @@ let currentUser=null, currentSession=null, leads=[], responsaveis=[];
 let sortField='data_proxima_acao', sortDir=1, editingId=null, pollingTimer=null;
 
 // ── REST API ──
-const api = async (method, path, body, svc=false) => {
-  const key = svc ? SB_SVC : SB_KEY;
-  const tok = svc ? SB_SVC : (currentSession?.access_token || SB_KEY);
+const api = async (method, path, body) => {
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
     method,
-    headers: {'apikey':key,'Authorization':`Bearer ${tok}`,'Content-Type':'application/json','Prefer':'return=representation'},
+    headers: {'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
     body: body ? JSON.stringify(body) : undefined
   });
   if (!r.ok) throw new Error(await r.text());
   const t = await r.text(); return t ? JSON.parse(t) : null;
-};
-
-// ── AUTH API ──
-const authFetch = async (method, path, body, svc=false) => {
-  const key = svc ? SB_SVC : SB_KEY;
-  const tok = svc ? SB_SVC : (currentSession?.access_token || SB_KEY);
-  const r = await fetch(`${SB_URL}/auth/v1${path}`, {
-    method,
-    headers: {'apikey':key,'Authorization':`Bearer ${tok}`,'Content-Type':'application/json'},
-    body: body ? JSON.stringify(body) : undefined
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.error_description || data.msg || 'Erro de autenticação');
-  return data;
 };
 
 // ── STORAGE ──
@@ -532,40 +516,35 @@ const showToast = (msg, type='success') => {
 };
 const dateStatus = s => { if(!s) return ''; const t=today(); return s<t?'vencido':s===t?'hoje':'ok'; };
 
+// ── CREDENCIAIS LOCAIS ──
+const USUARIOS = {
+  'admin':    { pass: '!jose3466',                 role: 'admin',   nome: 'Gabriel', initials: 'GA' },
+  'sunpower': { pass: 'contatinhossunpower864597', role: 'agencia', nome: 'Agência', initials: 'SP' }
+};
+
 // ── LOGIN ──
 const fazerLogin = async () => {
   const u = document.getElementById('login-user').value.trim().toLowerCase();
   const p = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
   errEl.style.display='none';
-  try {
-    // 1. Busca perfil pelo username
-    const perfis = await api('GET', `perfis?username=eq.${encodeURIComponent(u)}&select=*`);
-    if (!perfis?.length) throw new Error('Usuário não encontrado');
-    const perfil = perfis[0];
-    const email = perfil.email_login;
-    if (!email) throw new Error('Email de login não configurado. Contate o administrador.');
-
-    // 2. Autentica via Supabase Auth
-    const authData = await authFetch('POST','/token?grant_type=password',{email, password:p});
-    currentSession = authData;
-    currentUser = { id:perfil.id, username:perfil.username, role:perfil.role, nome:perfil.nome_exibicao, email };
-
+  const usr = USUARIOS[u];
+  if (usr && usr.pass === p) {
+    currentUser = { username: u, role: usr.role, nome: usr.nome };
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
-    document.getElementById('user-name-display').textContent = perfil.nome_exibicao;
-    document.getElementById('user-role-display').textContent = perfil.role==='admin'?'Administrador':'Agência';
-    document.getElementById('user-avatar').textContent = (perfil.nome_exibicao||'??').slice(0,2).toUpperCase();
-    if (perfil.role==='admin') {
+    document.getElementById('user-name-display').textContent = usr.nome;
+    document.getElementById('user-role-display').textContent = usr.role==='admin'?'Administrador':'Agência';
+    document.getElementById('user-avatar').textContent = usr.initials;
+    if (usr.role==='admin') {
       document.getElementById('nav-admin').style.display='flex';
       document.getElementById('bn-admin').style.display='flex';
     }
     showMobileUI(true);
     iniciar();
-  } catch(e) {
+  } else {
     errEl.textContent = 'Usuário ou senha incorretos.';
     errEl.style.display='block';
-    console.error(e.message);
   }
 };
 
@@ -877,37 +856,22 @@ const renderAdmin = async () => {
     return;
   }
 
-  // Usuários
-  try {
-    const usuarios = await api('GET','perfis?order=role.asc,nome_exibicao.asc&select=*',null,true);
-    const uArea = document.getElementById('admin-usuarios-area');
-    uArea.innerHTML = (usuarios||[]).map(u=>`
-      <div class="user-item">
-        <div class="user-item-avatar">${(u.nome_exibicao||'?').slice(0,2).toUpperCase()}</div>
-        <div class="user-item-info">
-          <div class="user-item-name">${u.nome_exibicao||u.username}</div>
-          <div class="user-item-meta">@${u.username} · ${u.email_login||'—'}</div>
-        </div>
-        <span class="user-item-role ${u.role==='admin'?'role-admin':'role-agencia'}">${u.role==='admin'?'Admin':'Agência'}</span>
-        ${u.id!==currentUser.id?`<button class="btn btn-ghost btn-sm" onclick="editarSenhaUsuario('${u.id}','${u.nome_exibicao||u.username}')">🔑 Senha</button>`:''}
-        ${u.id!==currentUser.id?`<button class="btn btn-danger btn-sm" onclick="deletarUsuario('${u.id}','${u.nome_exibicao}')">🗑️</button>`:''}
-      </div>`).join('')
-    + `<div style="margin-top:12px">
-        <p style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Novo Usuário</p>
-        <div class="input-row">
-          <input type="text" id="novo-u-nome" placeholder="Nome" />
-          <input type="text" id="novo-u-user" placeholder="Usuário (login)" />
-          <input type="email" id="novo-u-email" placeholder="Email" />
-          <input type="password" id="novo-u-senha" placeholder="Senha" />
-          <select id="novo-u-role"><option value="agencia">Agência</option><option value="admin">Admin</option></select>
-          <button class="btn btn-primary btn-sm" onclick="criarUsuario()">+ Criar</button>
-        </div>
-       </div>`;
-  } catch(e) { document.getElementById('admin-usuarios-area').innerHTML=`<p style="font-size:13px;color:var(--red)">Erro ao carregar usuários.</p>`; }
+  // Usuários (exibição estática — gerenciados no código)
+  const uArea = document.getElementById('admin-usuarios-area');
+  uArea.innerHTML = Object.entries(USUARIOS).map(([u,v])=>`
+    <div class="user-item">
+      <div class="user-item-avatar">${v.initials}</div>
+      <div class="user-item-info">
+        <div class="user-item-name">${v.nome}</div>
+        <div class="user-item-meta">@${u}</div>
+      </div>
+      <span class="user-item-role ${v.role==='admin'?'role-admin':'role-agencia'}">${v.role==='admin'?'Admin':'Agência'}</span>
+    </div>`).join('')
+  + `<p style="font-size:12px;color:var(--text3);margin-top:10px">Para adicionar ou alterar usuários e senhas, peça ao desenvolvedor do sistema.</p>`;
 
   // Responsáveis
   try {
-    const todos = await api('GET','responsaveis?order=nome.asc&select=*',null,true);
+    const todos = await api('GET','responsaveis?order=nome.asc&select=*');
     const rArea = document.getElementById('admin-resp-area');
     rArea.innerHTML = (todos||[]).map(r=>`
       <div class="resp-item">
@@ -928,51 +892,7 @@ const renderAdmin = async () => {
   document.getElementById('admin-data-area').innerHTML=`<button class="btn btn-danger btn-sm" onclick="confirmarLimpar()">🗑️ Apagar todos os leads</button>`;
 };
 
-// ── GESTÃO DE USUÁRIOS ──
-const criarUsuario = async () => {
-  const nome=document.getElementById('novo-u-nome').value.trim();
-  const username=document.getElementById('novo-u-user').value.trim().toLowerCase();
-  const email=document.getElementById('novo-u-email').value.trim();
-  const senha=document.getElementById('novo-u-senha').value;
-  const role=document.getElementById('novo-u-role').value;
-  if (!nome||!username||!email||!senha) { showToast('Preencha todos os campos','error'); return; }
-  try {
-    const authUser = await authFetch('POST','/admin/users',{email,password:senha,email_confirm:true},true);
-    await api('POST','perfis',{id:authUser.id,username,email_login:email,role,nome_exibicao:nome},true);
-    showToast('Usuário criado!');
-    await renderAdmin();
-  } catch(e) { showToast('Erro: '+e.message,'error'); }
-};
 
-const editarSenhaUsuario = (userId, nome) => {
-  const nova = prompt(`Nova senha para ${nome}:`);
-  if (!nova||nova.length<6) { showToast('Senha muito curta (mín. 6 caracteres)','error'); return; }
-  authFetch('PUT',`/admin/users/${userId}`,{password:nova},true)
-    .then(()=>showToast(`Senha de ${nome} alterada!`))
-    .catch(e=>showToast('Erro: '+e.message,'error'));
-};
-
-const deletarUsuario = async (userId, nome) => {
-  if (!confirm(`Excluir usuário "${nome}"? Esta ação é irreversível.`)) return;
-  try {
-    await authFetch('DELETE',`/admin/users/${userId}`,null,true);
-    await api('DELETE',`perfis?id=eq.${userId}`,null,true);
-    showToast('Usuário excluído!'); await renderAdmin();
-  } catch(e) { showToast('Erro: '+e.message,'error'); }
-};
-
-const alterarMinhaSenha = async () => {
-  const nova=document.getElementById('nova-senha').value;
-  const conf=document.getElementById('nova-senha-conf').value;
-  if (!nova||nova.length<6) { showToast('Senha muito curta (mín. 6 caracteres)','error'); return; }
-  if (nova!==conf) { showToast('As senhas não coincidem','error'); return; }
-  try {
-    await authFetch('PUT',`/admin/users/${currentUser.id}`,{password:nova},true);
-    showToast('Senha alterada com sucesso!');
-    document.getElementById('nova-senha').value='';
-    document.getElementById('nova-senha-conf').value='';
-  } catch(e) { showToast('Erro: '+e.message,'error'); }
-};
 
 // ── GESTÃO DE RESPONSÁVEIS ──
 const adicionarResponsavel = async () => {

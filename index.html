@@ -195,6 +195,11 @@
     .empty-state{text-align:center;padding:56px 20px;color:var(--text3);}
     .empty-state .icon{font-size:36px;margin-bottom:10px;}
     .empty-state p{font-size:14px;}
+    .sugestao-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:2px;}
+    .sugestao-item:last-child{border-bottom:none;}
+    .sugestao-item:hover{background:var(--green-faint);}
+    .sugestao-nome{font-weight:600;color:var(--text);}
+    .sugestao-det{font-size:11px;color:var(--text3);}
     .loading-files{font-size:12px;color:var(--text3);padding:10px 0;}
     .input-row{display:flex;gap:8px;margin-bottom:12px;}
     .input-row input,.input-row select{flex:1;padding:9px 13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;font-family:'Inter',sans-serif;}
@@ -409,7 +414,11 @@
     <div class="modal-body">
       <div id="status-flow-info" class="status-info" style="display:none"></div>
       <div class="form-grid">
-        <div class="form-group"><label>Nome *</label><input type="text" id="f-nome" placeholder="Nome completo" /></div>
+        <div class="form-group" style="position:relative">
+          <label>Nome *</label>
+          <input type="text" id="f-nome" placeholder="Nome completo" autocomplete="off" oninput="onNomeInput()" onblur="setTimeout(()=>document.getElementById('nome-sugestoes').style.display='none',200)" />
+          <div id="nome-sugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--green);border-radius:0 0 9px 9px;z-index:50;box-shadow:var(--shadow);max-height:180px;overflow-y:auto;"></div>
+        </div>
         <div class="form-group"><label>Telefone</label><input type="text" id="f-tel" placeholder="(xx) xxxxx-xxxx" /></div>
         <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="email@exemplo.com" /></div>
         <div class="form-group"><label>Destino de Interesse</label><input type="text" id="f-destino" placeholder="Ex: Portugal, Cancún..." /></div>
@@ -730,7 +739,11 @@ const abrirModalEditar = async id => {
   carregarArquivos(id);
 };
 
-const fecharModal = () => { document.getElementById('modal-lead').classList.remove('open'); editingId=null; };
+const fecharModal = () => {
+  document.getElementById('modal-lead').classList.remove('open');
+  document.getElementById('nome-sugestoes').style.display='none';
+  editingId=null;
+};
 
 const onStatusChange = (isNew=true) => {
   const st=parseInt(document.getElementById('f-status').value);
@@ -985,7 +998,30 @@ const showMobileUI = show => {
   document.getElementById('bottom-nav').style.display=show?'flex':'none';
 };
 
-document.getElementById('modal-lead').addEventListener('click', function(e){ if(e.target===this) fecharModal(); });
+// ── AUTOCOMPLETE NOME ──
+const normalizar = s => s?.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim() || '';
+
+const onNomeInput = () => {
+  if (editingId) return; // só no modo novo
+  const val = document.getElementById('f-nome').value;
+  const sug = document.getElementById('nome-sugestoes');
+  if (val.length < 2) { sug.style.display='none'; return; }
+  const norm = normalizar(val);
+  const matches = leads.filter(l => normalizar(l.nome).includes(norm)).slice(0,6);
+  if (!matches.length) { sug.style.display='none'; return; }
+  sug.innerHTML = matches.map(l => `
+    <div class="sugestao-item" onmousedown="selecionarSugestao('${l.id}')">
+      <span class="sugestao-nome">${l.nome}</span>
+      <span class="sugestao-det">${statusLabel[l.status]||''} · ${l.telefone||l.email||'—'} · ${l.ultimo_destino||'—'}</span>
+    </div>`).join('');
+  sug.style.display='block';
+};
+
+const selecionarSugestao = id => {
+  document.getElementById('nome-sugestoes').style.display='none';
+  fecharModal();
+  setTimeout(() => abrirModalEditar(id), 100);
+};
 </script>
 </body>
 </html>

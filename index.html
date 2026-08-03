@@ -71,10 +71,10 @@
     .btn-xs{padding:4px 10px;font-size:11px;border-radius:7px;}
 
     /* STATS */
-    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:26px;}
     .stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
     .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
-    .stat-card.s1::after{background:var(--blue);} .stat-card.s2::after{background:var(--orange);} .stat-card.s3::after{background:var(--green);} .stat-card.s4::after{background:var(--red);}
+    .stat-card.s1::after{background:var(--blue);} .stat-card.s2::after{background:var(--orange);} .stat-card.s3::after{background:var(--purple);} .stat-card.s4::after{background:var(--green);} .stat-card.s5::after{background:var(--red);}
     .stat-icon{font-size:20px;margin-bottom:10px;display:block;}
     .stat-number{font-family:'Montserrat',sans-serif;font-size:34px;font-weight:800;color:var(--text);line-height:1;}
     .stat-label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-top:6px;}
@@ -97,7 +97,12 @@
     .action-date{font-size:12px;color:var(--text2);white-space:nowrap;font-weight:500;}
     .action-date.vencido{color:var(--red);font-weight:700;} .action-date.hoje{color:var(--orange);font-weight:700;}
     .badge-vencido{display:inline-block;padding:1px 7px;background:rgba(217,48,37,0.1);color:var(--red);border-radius:4px;font-size:9px;font-weight:800;margin-left:6px;text-transform:uppercase;}
-    .sep-responsavel{padding:7px 20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);background:var(--green-faint);border-bottom:1px solid var(--border);}
+    .sep-responsavel{padding:10px 20px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--green);background:var(--green-faint);border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background 0.15s;}
+    .sep-responsavel:hover{background:rgba(0,120,72,0.16);}
+    .sep-responsavel .resp-chevron{font-size:11px;transition:transform 0.2s;}
+    .sep-responsavel.collapsed .resp-chevron{transform:rotate(-90deg);}
+    .resp-group-items{transition:all 0.2s;}
+    .resp-group-items.hidden{display:none;}
 
     /* INSIGHTS */
     .insight-list{padding:14px 20px;}
@@ -122,7 +127,7 @@
     tbody td{padding:12px 16px;font-size:13px;}
     .status-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
     .st1{background:rgba(26,115,200,0.10);color:var(--blue);} .st2{background:rgba(224,123,42,0.12);color:var(--orange);}
-    .st3{background:rgba(0,120,72,0.12);color:var(--green);} .st4{background:rgba(217,48,37,0.10);color:var(--red);}
+    .st3{background:rgba(123,94,167,0.12);color:var(--purple);} .st4{background:rgba(0,120,72,0.12);color:var(--green);} .st5{background:rgba(217,48,37,0.10);color:var(--red);}
     .date-vencida{color:var(--red);font-weight:700;} .date-hoje{color:var(--orange);font-weight:700;}
 
     /* MODAL */
@@ -247,7 +252,7 @@
       .bottom-nav-item .bn-icon{font-size:20px;}
       .bottom-nav-item.active{color:var(--green);}
       .page-header{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:16px;}
-      .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+      .stats-grid{grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
       .stat-number{font-size:28px;}
       .filters{flex-direction:column;gap:8px;}
       .filters input,.filters select{width:100%;}
@@ -360,8 +365,9 @@
           <option value="">Todos os status</option>
           <option value="1">Novo Lead</option>
           <option value="2">Orçamento Enviado</option>
-          <option value="3">Fechado</option>
-          <option value="4">Negado</option>
+          <option value="3">Em Negociação</option>
+          <option value="4">Fechado</option>
+          <option value="5">Negado</option>
         </select>
         <select id="filtro-resp" onchange="renderClientes()"><option value="">Todos os responsáveis</option></select>
       </div>
@@ -484,15 +490,22 @@
           <select id="i-status" onchange="onInterStatusChange()">
             <option value="1">1 — Novo Lead</option>
             <option value="2">2 — Orçamento Enviado</option>
-            <option value="3">3 — Fechado</option>
-            <option value="4">4 — Negado</option>
+            <option value="3">3 — Em Negociação</option>
+            <option value="4">4 — Fechado</option>
+            <option value="5">5 — Negado</option>
           </select>
         </div>
         <div class="form-group" id="i-proxima-group">
           <label>Próxima Ação <span style="font-size:10px;color:var(--text3)">(automático)</span></label>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="date" id="i-proxima" readonly style="flex:1" />
-            <button id="i-pensando-group" class="btn btn-ghost btn-sm" onclick="aplicarPensando()" style="display:none;border-color:var(--orange);color:var(--orange);white-space:nowrap">🤔 +1 dia</button>
+            <div id="i-pensando-group" style="display:none;align-items:center;gap:4px">
+              <select id="pensando-dias" style="padding:7px 8px;background:#fff;border:1.5px solid var(--orange);border-radius:8px;color:var(--orange);font-size:12px;font-weight:700;outline:none;cursor:pointer;width:52px">
+                <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="aplicarPensando()" style="border-color:var(--orange);color:var(--orange);white-space:nowrap">🤔 dia(s)</button>
+            </div>
           </div>
         </div>
         <div class="form-group full"><label>Observações da Solicitação</label><textarea id="i-obs" placeholder="Detalhes sobre esta viagem específica..."></textarea></div>
@@ -588,8 +601,8 @@ const formatBytes = b => b>1048576?`${(b/1048576).toFixed(1)} MB`:`${(b/1024).to
 const normalizar = s => s?.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()||'';
 const meses = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const mesesFull = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const statusLabel = ['','Novo Lead','Orçamento Enviado','Fechado','Negado'];
-const statusClass = ['','st1','st2','st3','st4'];
+const statusLabel = ['','Novo Lead','Orçamento Enviado','Em Negociação','Fechado','Negado'];
+const statusClass = ['','st1','st2','st3','st4','st5'];
 const showToast = (msg, type='success') => {
   const t=document.getElementById('toast');
   t.textContent=(type==='success'?'✅ ':'❌ ')+msg;
@@ -693,19 +706,19 @@ const carregarDados = async () => {
 // Helper: pega interação mais recente ativa (status 1 ou 2) de um cliente
 const getInteracaoAtiva = clienteId => {
   const inters = interacoesCache[clienteId]||[];
-  return inters.find(i=>i.status<=2) || inters[0] || null;
+  return inters.find(i=>i.status<=3) || inters[0] || null;
 };
 
 // ── DASHBOARD ──
 const renderDashboard = () => {
   // Conta por status da interação mais recente de cada cliente
-  const counts=[0,0,0,0,0];
+  const counts=[0,0,0,0,0,0];
   clientes.forEach(c => {
     const ia = getInteracaoAtiva(c.id);
-    if(ia && ia.status>=1 && ia.status<=4) counts[ia.status]++;
+    if(ia && ia.status>=1 && ia.status<=5) counts[ia.status]++;
   });
 
-  const icons=['🔵','🟠','🟢','🔴'], cls=['s1','s2','s3','s4'], lbs=['Novo Lead','Orç. Enviado','Fechados','Negados'];
+  const icons=['🔵','🟠','🟣','🟢','🔴'], cls=['s1','s2','s3','s4','s5'], lbs=['Novo Lead','Orç. Enviado','Em Negociação','Fechados','Negados'];
   document.getElementById('stats-grid').innerHTML=lbs.map((l,i)=>`
     <div class="stat-card ${cls[i]}"><span class="stat-icon">${icons[i]}</span><div class="stat-number">${counts[i+1]}</div><div class="stat-label">${l}</div></div>`).join('');
 
@@ -713,7 +726,7 @@ const renderDashboard = () => {
   const acoes=[];
   clientes.forEach(c => {
     const inters=interacoesCache[c.id]||[];
-    inters.filter(i=>i.status<=2&&i.data_proxima_acao).forEach(i=>{
+    inters.filter(i=>i.status<=3&&i.data_proxima_acao).forEach(i=>{
       acoes.push({...i, cliente_nome:c.nome});
     });
   });
@@ -729,23 +742,35 @@ const renderDashboard = () => {
     lista.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>Nenhuma ação pendente</p></div>';
     return;
   }
-  let html='', lastResp=null;
+  let html='';
+  // Group by responsavel
+  const grupos={};
   acoes.forEach(i=>{
-    if(i.responsavel!==lastResp){html+=`<div class="sep-responsavel">${i.responsavel||'Sem responsável'}</div>`;lastResp=i.responsavel;}
-    const ds=dateStatus(i.data_proxima_acao);
-    const dotCls=ds==='vencido'?'dot-vencido':ds==='hoje'?'dot-hoje':'dot-ok';
-    const dateCls=ds==='vencido'?'vencido':ds==='hoje'?'hoje':'';
-    const badge=ds==='vencido'?'<span class="badge-vencido">VENCIDO</span>':'';
-    const taskHtml=i.status===1?`<div class="action-task task-orcamento">→ Enviar orçamento</div>`:`<div class="action-task task-recontatar">→ Recontatar até ${formatDate(i.data_proxima_acao)}</div>`;
-    html+=`<div class="action-item" onclick="abrirModalCliente('${i.cliente_id}')">
-      <div class="action-dot ${dotCls}"></div>
-      <div class="action-info">
-        <div class="action-nome">${i.cliente_nome}${badge}</div>
-        <div class="action-det">${statusLabel[i.status]} · ${i.ultimo_destino||'—'}</div>
-        ${taskHtml}
-      </div>
-      <div class="action-date ${dateCls}">${formatDate(i.data_proxima_acao)}</div>
-    </div>`;
+    const key=i.responsavel||'Sem responsável';
+    if(!grupos[key]) grupos[key]=[];
+    grupos[key].push(i);
+  });
+  Object.entries(grupos).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([resp,items])=>{
+    const groupId='group-'+resp.replace(/\s/g,'_');
+    html+=`<div class="sep-responsavel collapsed" onclick="toggleRespGroup('${groupId}',this)">${resp} <span style="font-size:11px;color:var(--text3);font-weight:500;text-transform:none;letter-spacing:0">(${items.length})</span><span class="resp-chevron">▼</span></div>`;
+    html+=`<div class="resp-group-items hidden" id="${groupId}">`;
+    items.forEach(i=>{
+      const ds=dateStatus(i.data_proxima_acao);
+      const dotCls=ds==='vencido'?'dot-vencido':ds==='hoje'?'dot-hoje':'dot-ok';
+      const dateCls=ds==='vencido'?'vencido':ds==='hoje'?'hoje':'';
+      const badge=ds==='vencido'?'<span class="badge-vencido">VENCIDO</span>':'';
+      const taskHtml=i.status===1?`<div class="action-task task-orcamento">→ Enviar orçamento</div>`:`<div class="action-task task-recontatar">→ Recontatar até ${formatDate(i.data_proxima_acao)}</div>`;
+      html+=`<div class="action-item" onclick="abrirModalCliente('${i.cliente_id}')">
+        <div class="action-dot ${dotCls}"></div>
+        <div class="action-info">
+          <div class="action-nome">${i.cliente_nome}${badge}</div>
+          <div class="action-det">${statusLabel[i.status]} · ${i.ultimo_destino||'—'}</div>
+          ${taskHtml}
+        </div>
+        <div class="action-date ${dateCls}">${formatDate(i.data_proxima_acao)}</div>
+      </div>`;
+    });
+    html+='</div>';
   });
   lista.innerHTML=html;
 };
@@ -798,8 +823,8 @@ const renderClientes = () => {
 // ── BASE ATIVA ──
 const renderBaseAtiva = () => {
   const todasInter=Object.values(interacoesCache).flat();
-  const base=todasInter.filter(i=>i.status===3||i.status===4);
-  const fechados=base.filter(i=>i.status===3).length, negados=base.filter(i=>i.status===4).length;
+  const base=todasInter.filter(i=>i.status===4||i.status===5);
+  const fechados=base.filter(i=>i.status===4).length, negados=base.filter(i=>i.status===5).length;
   document.getElementById('base-stats').innerHTML=`
     <div class="base-stat"><div class="base-stat-num">${base.length}</div><div class="base-stat-label">Total de Solicitações</div></div>
     <div class="base-stat"><div class="base-stat-num" style="color:var(--green)">${fechados}</div><div class="base-stat-label">Fechadas</div></div>
@@ -994,25 +1019,28 @@ const onInterStatusChange = (isNew=true) => {
     info.style.display='block'; info.className='status-info';
     info.innerHTML='<strong>Novo Lead:</strong> Envie o orçamento hoje e mude para o status 2.';
     iResp.disabled=false;
-  } else if(st===2){
+  } else if(st===2||st===3){
     pg.style.display='flex'; pp.style.display='inline-flex';
-    if(isNew) document.getElementById('i-proxima').value=addDays(today(),1);
+    if(isNew) document.getElementById('i-proxima').value=addDays(today(),3);
     info.style.display='block'; info.className='status-info';
-    info.innerHTML='<strong>Orçamento Enviado:</strong> Recontate em 1 dia. Se estiver pensando, clique em "+1 dia".';
+    info.innerHTML=st===2
+      ?'<strong>Orçamento Enviado:</strong> Próxima ação em 3 dias. Ajuste se necessário.'
+      :'<strong>Em Negociação:</strong> Mantenha o acompanhamento. Ajuste a próxima ação conforme necessário.';
     iResp.disabled=false;
   } else {
     pg.style.display='none'; pp.style.display='none';
     info.style.display='block'; info.className='status-info warn';
-    info.innerHTML=`<strong>${st===3?'Fechado':'Negado'}:</strong> O responsável será removido — contato passa a ser geral da agência.`;
-    document.getElementById('i-resp').value=''; iResp.disabled=true;
+    info.innerHTML=`<strong>${st===4?'Fechado':'Negado'}:</strong> Esta solicitação será encerrada.`;
+    iResp.disabled=false;
   }
 };
 
 document.getElementById('i-status').addEventListener('change',()=>onInterStatusChange(true));
 
 const aplicarPensando = () => {
-  document.getElementById('i-proxima').value=addDays(today(),1);
-  showToast('Próxima ação: amanhã');
+  const dias=parseInt(document.getElementById('pensando-dias')?.value||3);
+  document.getElementById('i-proxima').value=addDays(today(),dias);
+  showToast(`Próxima ação: +${dias} dia${dias>1?'s':''}`);
 };
 
 const salvarInteracao = async () => {
@@ -1202,6 +1230,13 @@ const confirmarLimpar = async () => {
   if(!confirm('Tem certeza? Irreversível.')) return;
   try{await api('DELETE','clientes?id=neq.00000000-0000-0000-0000-000000000000');showToast('Apagado');await carregarDados();}
   catch(e){showToast('Erro','error');}
+};
+
+const toggleRespGroup = (groupId, el) => {
+  const group=document.getElementById(groupId);
+  if(!group) return;
+  group.classList.toggle('hidden');
+  el.classList.toggle('collapsed');
 };
 
 // ── NAVEGAÇÃO ──

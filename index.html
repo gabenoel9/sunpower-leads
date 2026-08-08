@@ -99,9 +99,10 @@
     .badge-vencido{display:inline-block;padding:1px 7px;background:rgba(217,48,37,0.1);color:var(--red);border-radius:4px;font-size:9px;font-weight:800;margin-left:6px;text-transform:uppercase;}
     .sep-responsavel{padding:10px 20px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--green);background:var(--green-faint);border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background 0.15s;}
     .sep-responsavel:hover{background:rgba(0,120,72,0.16);}
+    .sep-responsavel .resp-count{font-size:11px;color:var(--text3);font-weight:500;text-transform:none;letter-spacing:0;margin-left:8px;}
+    .sep-responsavel .resp-right{display:flex;align-items:center;gap:8px;}
     .sep-responsavel .resp-chevron{font-size:11px;transition:transform 0.2s;}
     .sep-responsavel.collapsed .resp-chevron{transform:rotate(-90deg);}
-    .resp-group-items{transition:all 0.2s;}
     .resp-group-items.hidden{display:none;}
 
     /* INSIGHTS */
@@ -315,9 +316,6 @@
 <div id="app">
   <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">
-        <svg viewBox="0 0 36 36" fill="none"><rect x="2" y="10" width="10" height="10" rx="2" fill="white" opacity="0.9" transform="rotate(-45 9 15)"/><rect x="12" y="10" width="10" height="10" rx="2" fill="white" opacity="0.7" transform="rotate(-45 19 15)"/><rect x="2" y="20" width="10" height="10" rx="2" fill="white" opacity="0.7" transform="rotate(-45 9 25)"/><rect x="12" y="20" width="10" height="10" rx="2" fill="white" opacity="0.5" transform="rotate(-45 19 25)"/><rect x="16" y="14" width="6" height="6" rx="1" fill="white" opacity="0.9" transform="rotate(-45 19 17)"/></svg>
-      </div>
       <div class="sidebar-logo-text"><h2>Sunpower</h2><span>Gestão de Clientes</span></div>
     </div>
     <nav class="nav">
@@ -752,7 +750,7 @@ const renderDashboard = () => {
   });
   Object.entries(grupos).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([resp,items])=>{
     const groupId='group-'+resp.replace(/\s/g,'_');
-    html+=`<div class="sep-responsavel collapsed" onclick="toggleRespGroup('${groupId}',this)">${resp} <span style="font-size:11px;color:var(--text3);font-weight:500;text-transform:none;letter-spacing:0">(${items.length})</span><span class="resp-chevron">▼</span></div>`;
+    html+=`<div class="sep-responsavel collapsed" onclick="toggleRespGroup('${groupId}',this)"><span>${resp}</span><div class="resp-right"><span class="resp-count">(${items.length})</span><span class="resp-chevron">▶</span></div></div>`;
     html+=`<div class="resp-group-items hidden" id="${groupId}">`;
     items.forEach(i=>{
       const ds=dateStatus(i.data_proxima_acao);
